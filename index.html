@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Rotonde by HackerLoop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Rotonde</h1>
+      <h2 class="project-tagline">Module to Module framework</h2>
+      <a href="https://github.com/HackerLoop/rotonde" class="btn">View on GitHub</a>
+      <a href="https://github.com/HackerLoop/rotonde/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/HackerLoop/rotonde/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="motivations" class="anchor" href="#motivations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Motivations</h1>
+
+<p>This project aims to provide a better environment for building hardware projects with complexe interactions between the low level (micro-controllers/embedded software/...) and the higher level (eg. UI/UX for public access).
+It also aims to resolves many of the common difficulties and caveats of modern embedded development.</p>
+
+<p>From previous observations, here is an unexhaustive list of the key concepts that should be obtained by using the rotonde project.</p>
+
+<ul>
+<li>
+<strong>Language-agnostic</strong>. In a typical case, where the core of the architecture is usually a raspberryPi-like computer, there is no "way-to-go" like on iOS or android (which both have a forced unique language), this freedom of choice implies that useful pieces of codes or language bindings that you gather on the WEB can be of any language. The framework should not be tighted to a specific language, and if multiple languages are used, the usability of the framework should still feel native in all languages.</li>
+<li>
+<strong>Connected</strong>. Building electronics in 2015 usually implies a connection to the WEB, which means that the framework give you the ability to seemlessly and securely add cloud code execution in the loop.</li>
+<li>
+<strong>Modular</strong>. This framework has its origins in agencies, fastness of execution is a key feature of the framework. The framework should encourage a modular architecture, which allows highly efficient reuse of code from one project to another.</li>
+<li>
+<strong>Hardware abstraction</strong>. One of the issue that you face when developping on embedded linux environment is the lack of unicity in the low level hardware access. For example, GPIO are not accessed the same way on a raspberryPI and an edison. The framework should greatly simplify the transfer of code from one architecture to another, without having to refactor existing code.</li>
+<li>
+<strong>UI friendly</strong>. The whole system should be easily connected to a screen or any HID device, even a smartphone through wireless means, or both. any combination of WEB/touch screen/external device should be greatly simplified and interchangeable.</li>
+<li>
+<strong>Remotely debuggable</strong>. Building custom devices implies remote support and debugging. The framework should provide an environment that is easily debuggable, even from a remote access. All modules should be individually observable, and interaction from a remote point is the key to cheap and responsive support.</li>
+<li>
+<strong>Cluster creation</strong>. Inter connectivity of devices is a known complexe situation. This should be easily challenged by providing a clean way of creating meshes of devices. TODO check MQTT for amazon for IoT plateform</li>
+</ul>
+
+<h1>
+<a id="setup" class="anchor" href="#setup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Setup</h1>
+
+<h2>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+<ul>
+<li>some unix os (tested with success on Linux and OSX so far)</li>
+<li>
+<a href="https://golang.org/">Golang</a> (1.5.1, please tell us if you got it
+working on previous versions, we didn't test them yet)</li>
+<li><a href="http://godoc.org/github.com/tools/godep">Godep</a></li>
+</ul>
+
+<h2>
+<a id="compilation" class="anchor" href="#compilation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Compilation</h2>
+
+<p>Assuming Golang had been installed, if it's not already done a workspace
+can be set with  </p>
+
+<div class="highlight highlight-source-shell"><pre><span class="pl-k">export</span> GOPATH=<span class="pl-smi">$HOME</span>/go
+mkdir <span class="pl-smi">$GOPATH</span>
+go get github.com/HackerLoop/rotonde <span class="pl-k">&amp;&amp;</span> go get github.com/tools/godep
+<span class="pl-c1">cd</span> <span class="pl-smi">$GOPATH</span>/src/github.com/HackerLoop/rotonde
+godep restore
+go build</pre></div>
+
+<p><code>go build</code> will compile an executable called <code>rotonde</code> in the project
+folder (<code>$GOPATH/src/HackerLoop/rotonde</code>).</p>
+
+<p>If something goes wrong during compilation, please <a href="https://github.com/HackerLoop/rotonde/issues">open up an
+issue</a> with your
+os/distribution infos and compilation output. </p>
+
+<h2>
+<a id="running" class="anchor" href="#running" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running</h2>
+
+<div class="highlight highlight-source-shell"><pre>./rotonde -port 4242</pre></div>
+
+<h2>
+<a id="json-protocol" class="anchor" href="#json-protocol" aria-hidden="true"><span class="octicon octicon-link"></span></a>JSON protocol</h2>
+
+<p>In most case, rotonde is used through its websocket (Rest interface is foreseen), by sending and receiving JSON objects.
+There a five types of json objects, "update", "req", "cmd", "sub" or "unsub",
+which are detailed below.</p>
+
+<p>These four json objects all share a common structure :</p>
+
+<pre><code>{
+  type: "", // "update", "req", "cmd", "sub" or "unsub"
+  payload: {
+    // mixed, based on type
+  }
+}
+</code></pre>
+
+<h3>
+<a id="update" class="anchor" href="#update" aria-hidden="true"><span class="octicon octicon-link"></span></a>Update</h3>
+
+<p>The "update" object encapsulate an update of a Object, which can be
+found in two different contexts.</p>
+
+<ul>
+<li>Received as a notification that a setting had been updated.</li>
+<li>Sent to update a setting</li>
+</ul>
+
+<p>For example, the attitude module (which is responsible for attitude estimation, which means "what is the current angle of the drone") will periodically send the quaternion representing the current angle of the drone through the AttitudeActual object.</p>
+
+<p>But "update" objects can also be used to set setting values for the desired module, for example, if you send a <a href="https://raw.githubusercontent.com/TauLabs/TauLabs/next/shared/uavobjectdefinition/attitudesettings.xml">AttitudeSettings</a> update object through websocket it will configure the PID algorithm that enables your drone to stay still in the air.</p>
+
+<pre><code>{
+  "type": "update",
+  "payload": {
+    // objectId and instanceId are both required
+    "objectId": 1234, // displayed on start of rotonde
+    "instanceId": 0, // see UAVTalk documentation for info
+    "data": {
+      // Object data, as described by the definitions
+    }
+  }
+}
+</code></pre>
+
+<h3>
+<a id="req" class="anchor" href="#req" aria-hidden="true"><span class="octicon octicon-link"></span></a>Req</h3>
+
+<p>Some Objects are sent periodically, like the AttitudeActual that is sent every 100 ms, but others have different update policies, for example, the AttitudeSettings object is sent when changed, which means if you want its value you can either wait for it to change (which should not occure in normal condition), or just request it by sending a "req" object into the pipe, the response will be received as a "update" object.</p>
+
+<pre><code>{
+  "type": "req",
+  "payload": {
+    "objectId": 1234, // displayed on start of rotonde, will be received from the def packet
+    "instanceId": 0, // see UAVTalk documentation for info
+  }
+}
+</code></pre>
+
+<h3>
+<a id="sub--unsub" class="anchor" href="#sub--unsub" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sub / Unsub</h3>
+
+<p>When you connect to rotonde nothing will be received except definitions, you have to subscribe to a given objectId in order to start receiving its updates.</p>
+
+<pre><code>{
+  "type": "sub",
+  "payload": {
+    "objectId": 1234 // displayed on start of rotonde, will be received from the def packet
+  }
+}
+</code></pre>
+
+<p>and you can unsubscribe from this objectId with:</p>
+
+<pre><code>{
+  "type": "unsub",
+  "payload": {
+    "objectId": 1234 // displayed on start of rotonde, will be received from the def packet
+  }
+}
+</code></pre>
+
+<h3>
+<a id="def" class="anchor" href="#def" aria-hidden="true"><span class="octicon octicon-link"></span></a>Def</h3>
+
+<p>Each Object has a set of fields and meta datas, when a Object is available (like GPS), the module providing this feature sends its definition to rotonde which then dispatches a definition to the clients.
+Given that a Object reflects an available feature of the drone, definitions give clients a clear overview of the available features.
+A client can send definitions to rotonde, exposing the feature that it provides.</p>
+
+<p>When you connect to rotonde, it will start be sending you all the currently available definitions, new definitions can still become available at any time.</p>
+
+<pre><code>{
+  "type": "def",
+  "payload": {
+    // meta datas from Object, at first will be tightly linked to definitions found in the xml files
+  }
+}
+</code></pre>
+
+<h1>
+<a id="licence" class="anchor" href="#licence" aria-hidden="true"><span class="octicon octicon-link"></span></a>Licence</h1>
+
+<p><a href="https://github.com/HackerLoop/rotonde/blob/master/licence.md">Apache licence 2.0 </a></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/HackerLoop/rotonde">Rotonde</a> is maintained by <a href="https://github.com/HackerLoop">HackerLoop</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
