@@ -12,7 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-const ROTONDE_VENDOR_ID = 0x0420
+const ROTONDE_VENDOR_ID = 0x03EB //0x0420
 const MaxHIDFrameSize = 64
 const HeaderLength = 4
 
